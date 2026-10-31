@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Библиотека сказок</title>
+</head>
+<body style="color:green;">
+
+	<h2>Редактирование книги</h2>
+	<div>
+		<h3 style="display:inline-block">Название: </h3>
+		<h3 style="display:inline-block" id="nameBook"></h3>		
+	</div>
+	<div style="display:inline-block">
+		<h3 style="display:inline-block">Страница: </h3>
+		<input type="number" style="display:inline-block" min="1" max="5000" id="inputPage" placeholder="№">
+	</div>
+	<div>
+		<h3>Текст: </h3>
+		<textarea rows="5" cols="40" maxlength="1800" id="pageText" placeholder="Введите текст..."></textarea>
+	</div>
+	<input type="button" id="buttonSave" value="Сохранить">
+	<input type="button" id="backMain"   value="Все книги">
+
+	<script>
+
+		const nameBook = document.getElementById('nameBook');
+		const inputPage = document.getElementById('inputPage');
+		const pageText = document.getElementById('pageText');
+        const buttonSave = document.getElementById('buttonSave');
+		const buttonbackMain = document.getElementById('backMain');
+        const path = window.location.pathname;
+		const pathParts = path.split('/');
+
+		buttonbackMain.onclick = GoToMain;
+        buttonSave.onclick = SavePage;		
+        inputPage.onchange = WriteTextPage;
+
+		async function LoadBook() {
+            
+            const bookId = pathParts[2];
+			const pageId = pathParts[3];
+
+			const response = await fetch(`/bookEdit/${bookId}/${pageId}`);
+			const book = await response.json();
+			nameBook.innerText = book.name;
+            inputPage.value = book.page.id;
+			pageText.value = book.page.text;
+		}    
+
+        async function GoToMain() {
+            window.location.href = '/';
+		}
+
+        async function WriteTextPage() {
+
+            const bookId = pathParts[2];
+            const pageId = inputPage.value;
+            const response = await fetch(`/book/${bookId}/page/${pageId}`);
+			const page = await response.json();
+			if (response.ok) pageText.value = page.text;
+			else {
+                pageText.innerText = '';
+				console.log(page.message);
+				alert(page.message);
+			}			
+		}
+
+		async function SavePage() {
+			
+            const bookId = pathParts[2];
+			const pageId = inputPage.value;
+            const textPage = pageText.value;
+
+            const response = await fetch(`/bookEdit/${bookId}/${pageId}`, {
+                method: 'PATCH',
+				headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: textPage })
+            });
+
+			const result = await response.json();
+			alert(result.message);
+        }
+
+		LoadBook();
+	</script>
+</body>
+</html>

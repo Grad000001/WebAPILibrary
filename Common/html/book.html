@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title id="titl">[название сказки]</title>
+</head>
+<body style="color:green;">
+
+    <h2 id="nameBook"></h2>
+    <h3 id="textBook" style="color:dodgerblue;"></h3>
+    <h4 id="numberPage" style="color:gray;">Стр. </h4>
+
+    <div id="buttons">
+        <input type="button" id="previous" style="margin-bottom: 20px" value="<">
+        <input type="button" id="next"     style="margin-bottom: 20px" value=">">
+        <input type="button" id="backMain" style="margin-bottom: 20px;display:block" value="Все книги">
+        <input type="button" id="edit"     value="Редактировать">
+    </div>
+
+    <script>
+        let pageOfBook;
+        const titl = document.getElementById('titl');
+        const nameBook = document.getElementById('nameBook');
+        const textBook = document.getElementById('textBook');
+        const numberPage = document.getElementById('numberPage');
+        const pathSegments = window.location.pathname.split('/');
+        const bookId = pathSegments[pathSegments.length - 1];
+        const container = document.getElementById('buttons');
+        const buttonPrevious = document.getElementById('previous');
+        const buttonNext = document.getElementById('next');
+        const buttonbackMain = document.getElementById('backMain');
+        const buttonEdit = document.getElementById('edit');
+
+        async function GetBook() {
+
+            const response = await fetch(`/book/${bookId}/p1`);
+            pageOfBook = await response.json();
+
+            titl.innerText = 'Произведение "' + pageOfBook.name + '"';
+            nameBook.innerText = pageOfBook.name;
+            textBook.innerText = pageOfBook.page.text;
+            numberPage.innerText = 'Стр. ' + pageOfBook.page.id;
+
+            buttonPrevious.onclick = GetPreviousPage;
+            if (pageOfBook.page.id === 1) {
+                buttonPrevious.style.display = 'none';
+            }
+
+            buttonNext.onclick = GetNextPage;
+            if (pageOfBook.page.id >= pageOfBook.countPage) {
+                buttonNext.style.display = 'none';
+            };
+
+            buttonbackMain.onclick = GoToMain;
+            buttonEdit.onclick = GoToEditBook;
+        }
+
+        async function GetPreviousPage() {
+            const response = await fetch(`/book/${bookId}/p${pageOfBook.page.id - 1}`);
+            pageOfBook = await response.json();
+            nameBook.innerText = pageOfBook.name;
+            textBook.innerText = pageOfBook.page.text;
+            numberPage.innerText = 'Стр. ' + pageOfBook.page.id;
+            buttonNext.style.display = 'inline-block';
+            if (pageOfBook.page.id === 1) {
+                buttonPrevious.style.display = 'none';
+            }
+        }
+
+        async function GetNextPage() {
+            const response = await fetch(`/book/${bookId}/p${pageOfBook.page.id + 1}`);
+            pageOfBook = await response.json();
+            nameBook.innerText = pageOfBook.name;
+            textBook.innerText = pageOfBook.page.text;
+            numberPage.innerText = 'Стр. ' + pageOfBook.page.id;
+            buttonPrevious.style.display = 'inline-block';
+            if (pageOfBook.page.id >= pageOfBook.countPage) {
+                buttonNext.style.display = 'none';
+            }
+        }
+
+        async function GoToMain() {
+            window.location.href = '/';
+        }
+
+        async function GoToEditBook() {
+
+            const path = window.location.pathname; 
+            const pathParts = path.split('/'); 
+            const bookId = pathParts[2];
+            const pageId = Number(numberPage.innerText.match(/\d/g).join(''));
+            window.location.href = `/book/${bookId}/${pageId}`;
+        }
+
+        GetBook();
+    </script>    
+    </body >
+    </html >
+

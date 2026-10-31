@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Библиотека сказок</title>
+</head>
+<body style="color:green;">
+
+	<h2>Создание книги</h2>
+
+	<div>
+		<h3 style="display:inline-block">Название: </h3>
+		<input type="text" maxlength="30" style="display:inline-block" id="inputName" placeholder="Введите название книги...">
+	</div>
+
+	<div style="display:inline-block">
+		<h3 style="display:inline-block">Страница: </h3>
+		<h3 style="display:inline-block">1</h3>
+	</div>
+
+	<div>
+		<h3>Текст: </h3>
+		<textarea rows="5" cols="40" maxlength="1800" id="inputText" placeholder="Введите текст..."></textarea>
+	</div>
+
+	<input type="button" id="buttonSave" value="Сохранить">
+	<input type="button" id="backMain"   value="Все книги">
+
+	<script>
+		const inputName = document.getElementById('inputName');
+        const inputText = document.getElementById('inputText');
+		const buttonbackMain = document.getElementById('backMain');
+		const buttonSave = document.getElementById('buttonSave');
+
+		buttonbackMain.onclick = GoToMain;
+        buttonSave.onclick = PostBook;
+
+        async function GoToMain() {
+			window.location.href = '/';
+		}    
+
+		async function PostBook() {
+            const newBook = {
+                name: inputName.value,
+                page: 
+				{
+					id: 1,
+                    text: inputText.value
+				},                 
+            };
+			
+            const response = await fetch('/bookCreate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify(newBook)
+			});
+
+            const result = await response.json();
+            if (response.ok) {                                                				
+				alert(result.message);
+				console.ok();
+			}
+			else {				
+                alert(result.message);
+                console.error();
+            } 											              
+        }
+	</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Библиотека</title>
+</head>
+<body style="color:green;">
+
+	<h2>Библиотека</h2>
+	<h3>Здесь можно читать, редактировать и создавать книги</h3>
+	<h4>Список книг:</h4>
+	<ul id="books"></ul>
+	<input type="button" id="buttonCreate" value="Создать книгу">
+
+	<script>		
+        const buttonCreate = document.getElementById('buttonCreate');
+
+        async function loadBooks() {
+            try {                
+                const response = await fetch('/books');
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при загрузке данных');
+                }
+                const books = await response.json();
+                const booksList = document.getElementById('books');
+
+                books.forEach(book => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+
+                    a.href = `book/${book.id}`;
+                    a.textContent = book.name;
+
+                    li.appendChild(a);
+                    booksList.appendChild(li);
+                });
+                buttonCreate.onclick = CreatePage;
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+
+        }
+
+        async function CreatePage() {
+            window.location.href = '/bookCreate';
+        }
+
+        loadBooks();
+    </script>
+</body>
+</html>
+
