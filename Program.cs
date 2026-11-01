@@ -56,50 +56,31 @@ namespace LibraryOfFairyTales
                 Console.WriteLine($"Запрос к серверу: {context.Request.Path} [{context.Request.Method}]");
                 await next(context);
             });
-
-            app.Use(async (context, next) =>
+            
+            app.MapGet("/book/{bookid}", async (HttpContext context, Guid bookid) =>
             {
-                Console.WriteLine("Запрос серверу");
                 var response = context.Response;
-                var request = context.Request;
-                string path = request.Path;
-                string guidMask = @"^/book/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$";                
-                string pageMask = @"^/book/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/p[0-9]+$";
-                
-                if (Regex.IsMatch(path, guidMask) && request.Method == "GET")
+                if (books.ContainsKey(bookid)) await response.SendFileAsync(@"Common/html/book.html");
+                else
                 {
-                    Guid id = Guid.Parse(path[6..]);
-
-                    if (books.ContainsKey(id)) await response.SendFileAsync(@"Common/html/book.html");                    
-                    else
-                    {
-                        response.ContentType = "text/plain; charset=utf-8";
-                        await response.WriteAsync("Такой книги нет!");
-                    }
-                    return;
+                    response.ContentType = "text/plain; charset=utf-8";
+                    await response.WriteAsync("Такой книги нет!");
                 }
-                else if (Regex.IsMatch(path, pageMask) && request.Method == "GET") //@"^/book/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/p[0-9]+$"
+            });
+
+            app.MapGet("/book/{bookid}/p{pageid}", async (HttpContext context, Guid bookid, int pageid) =>
+            {
+                if (books.ContainsKey(bookid))
                 {
-                    Console.WriteLine("Даём странице книгу по её id");
-
-                    Guid id = Guid.Parse(path[6..42]);
-
-                    if(books.ContainsKey(id))
-                    {
-                        Book? book = books[id];
-                        int.TryParse(path[44..], out int numberPage);
-                        PageOfBookDTO pageOfBook = new PageOfBookDTO(id, book.Name, book.Pages[numberPage - 1], book.Pages.Count);
-                        await response.WriteAsJsonAsync(pageOfBook);
-                    }
-                    else
-                    {
-                        response.ContentType = "text/plain; charset=utf-8";
-                        await response.WriteAsync("Такой книги нет! :(");
-                    }                        
-                    return;
+                    Book? book = books[bookid];                    
+                    PageOfBookDTO pageOfBook = new PageOfBookDTO(bookid, book.Name, book.Pages[pageid - 1], book.Pages.Count);
+                    await context.Response.WriteAsJsonAsync(pageOfBook);
                 }
-
-                await next(context);
+                else
+                {
+                    context.Response.ContentType = "text/plain; charset=utf-8";
+                    await context.Response.WriteAsync("Такой книги нет! :(");
+                }
             });
 
             app.MapGet("/", async (context) => 
